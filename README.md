@@ -32,7 +32,7 @@ Azure SQL Database [dbo.insurance_claims_scored]
 ## Tech Stack
 | Tool | Purpose |
 |------|---------|
-| Azure Data Factory V2 | Orchestration & weekly scheduling |
+| Azure Data Factory | Orchestration & weekly scheduling |
 | Azure Data Lake Storage Gen2 | Raw & transformed storage |
 | Azure Databricks (PySpark) | Transformation & risk scoring |
 | Delta Lake | Partitioned versioned storage format |
