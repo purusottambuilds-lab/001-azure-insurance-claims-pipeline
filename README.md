@@ -5,6 +5,7 @@ End-to-end data pipeline that ingests raw insurance claims data,
 applies PySpark-based risk scoring logic, stores output as Delta Lake,
 and loads curated data into Azure SQL Database — scheduled weekly via ADF.
 
+---
 
 ## Architecture
 ```
@@ -28,6 +29,7 @@ Delta Lake [transformed container]  <-- Partitioned by risk_score
     v
 Azure SQL Database [dbo.insurance_claims_scored]
 ```
+---
 
 ## Tech Stack
 | Tool | Purpose |
@@ -39,6 +41,8 @@ Azure SQL Database [dbo.insurance_claims_scored]
 | Azure SQL Database | Analytics-ready curated output |
 | Python / SQL | Scripting & querying |
 
+---
+
 ## Key Features
 - Automated ETL with ADF Schedule Trigger (weekly, Monday 8AM IST)
 - PySpark Risk Scoring: HIGH / MEDIUM / LOW classification logic
@@ -46,9 +50,13 @@ Azure SQL Database [dbo.insurance_claims_scored]
 - Data quality: null handling, deduplication, type casting
 - Error handling and monitoring via ADF Monitor
 
+---
+
 ## Dataset
 Public auto insurance claims dataset from Kaggle
 (kaggle.com/datasets/buntyshah/insurance-claims-data)
+
+---
 
 ## Repository Structure
 ```
@@ -59,3 +67,4 @@ docs/         -- Architecture screenshots
 README.md     -- This file
 ```
 
+---
