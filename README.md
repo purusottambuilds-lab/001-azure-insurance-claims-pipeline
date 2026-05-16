@@ -62,7 +62,7 @@ Public auto insurance claims dataset from Kaggle
 ```
 notebooks/   -- PySpark transformation scripts (.py)
 adf-pipelines/ -- ADF pipeline JSON definitions
-data/         -- Sample data (20 rows for reference)
+data/         -- Sample data
 docs/         -- Architecture screenshots
 README.md     -- This file
 ```
