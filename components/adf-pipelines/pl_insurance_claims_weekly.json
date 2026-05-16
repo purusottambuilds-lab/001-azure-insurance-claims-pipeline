@@ -1,0 +1,596 @@
+{
+    "name": "pl_insurance_claims_weekly",
+    "properties": {
+        "activities": [
+            {
+                "name": "RunTransformNotebook",
+                "type": "DatabricksNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/Users/purusottam.builds@gmail.com/02_insurance_claims_transform"
+                },
+                "linkedServiceName": {
+                    "referenceName": "ls_databricks_insurance",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "CopyDeltaToSql",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "RunTransformNotebook",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "ParquetSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "wildcardFileName": "*.parquet",
+                            "enablePartitionDiscovery": true
+                        },
+                        "formatSettings": {
+                            "type": "ParquetReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "AzureSqlSink",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false,
+                        "tableOption": "autoCreate",
+                        "disableMetricsCollection": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                            {
+                                "source": {
+                                    "name": "months_as_customer",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "months_as_customer",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "age",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "age",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_number",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "policy_number",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_bind_date",
+                                    "type": "DateTime",
+                                    "physicalType": "DATE"
+                                },
+                                "sink": {
+                                    "name": "policy_bind_date",
+                                    "type": "DateTime",
+                                    "physicalType": "datetime2"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_state",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "policy_state",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_csl",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "policy_csl",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_deductable",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "policy_deductable",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_annual_premium",
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
+                                },
+                                "sink": {
+                                    "name": "policy_annual_premium",
+                                    "type": "Double",
+                                    "physicalType": "float"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "umbrella_limit",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "umbrella_limit",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "insured_zip",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "insured_zip",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "insured_sex",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "insured_sex",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "insured_education_level",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "insured_education_level",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "insured_occupation",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "insured_occupation",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "insured_hobbies",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "insured_hobbies",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "insured_relationship",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "insured_relationship",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "capital-gains",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "capital-gains",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "capital-loss",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "capital-loss",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_date",
+                                    "type": "DateTime",
+                                    "physicalType": "DATE"
+                                },
+                                "sink": {
+                                    "name": "incident_date",
+                                    "type": "DateTime",
+                                    "physicalType": "datetime2"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_type",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_type",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "collision_type",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "collision_type",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_severity",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_severity",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "authorities_contacted",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "authorities_contacted",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_state",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_state",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_city",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_city",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_location",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_location",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_hour_of_the_day",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "incident_hour_of_the_day",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "number_of_vehicles_involved",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "number_of_vehicles_involved",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "property_damage",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "property_damage",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "bodily_injuries",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "bodily_injuries",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "witnesses",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "witnesses",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "police_report_available",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "police_report_available",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "total_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
+                                },
+                                "sink": {
+                                    "name": "total_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "float"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "injury_claim",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "injury_claim",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "property_claim",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "property_claim",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "vehicle_claim",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "vehicle_claim",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "auto_make",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "auto_make",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "auto_model",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "auto_model",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "auto_year",
+                                    "type": "Int32",
+                                    "physicalType": "INT32"
+                                },
+                                "sink": {
+                                    "name": "auto_year",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "fraud_reported",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "fraud_reported",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "_c39",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "_c39",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "risk_score",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "risk_score",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "processed_timestamp",
+                                    "type": "DateTime",
+                                    "physicalType": "INT96"
+                                },
+                                "sink": {
+                                    "name": "processed_timestamp",
+                                    "type": "DateTime",
+                                    "physicalType": "datetime2"
+                                }
+                            }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "ds_transformed_delta",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "ds_sql_insurance_scored",
+                        "type": "DatasetReference"
+                    }
+                ]
+            }
+        ],
+        "annotations": []
+    }
+}
