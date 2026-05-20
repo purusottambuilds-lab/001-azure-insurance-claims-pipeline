@@ -1,9 +1,11 @@
 {
-    "name": "pl_insurance_claims_weekly",
+    "name": "pl_001_insurance_claims",
     "properties": {
+        "description": "Weekly pipeline ingesting claims CSV, running DQ checks, applying PySpark risk scoring, storing Delta Lake output, and loading into Azure SQL DB.",
         "activities": [
             {
-                "name": "RunTransformNotebook",
+                "name": "RunDQCheck",
+                "description": "Data quality profiling - nulls, duplicates, schema validation, DQ score",
                 "type": "DatabricksNotebook",
                 "dependsOn": [],
                 "policy": {
@@ -15,19 +17,47 @@
                 },
                 "userProperties": [],
                 "typeProperties": {
-                    "notebookPath": "/Users/purusottam.builds@gmail.com/02_insurance_claims_transform"
+                    "notebookPath": "/Users/purusottam.builds@gmail.com/dir_001_claims_insurance/nb_01_dq_check"
                 },
                 "linkedServiceName": {
-                    "referenceName": "ls_databricks_insurance",
+                    "referenceName": "ls_databricks",
                     "type": "LinkedServiceReference"
                 }
             },
             {
-                "name": "CopyDeltaToSql",
+                "name": "RunTransform",
+                "description": "PySpark risk scoring, Delta Lake write with schema evolution",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "RunDQCheck",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/Users/purusottam.builds@gmail.com/dir_001_claims_insurance/nb_02_transform"
+                },
+                "linkedServiceName": {
+                    "referenceName": "ls_databricks",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "CopyToInsuranceSQL",
                 "type": "Copy",
                 "dependsOn": [
                     {
-                        "activity": "RunTransformNotebook",
+                        "activity": "RunTransform",
                         "dependencyConditions": [
                             "Succeeded"
                         ]
@@ -47,6 +77,7 @@
                         "storeSettings": {
                             "type": "AzureBlobFSReadSettings",
                             "recursive": true,
+                            "wildcardFolderPath": "insurance_claims_delta/**",
                             "wildcardFileName": "*.parquet",
                             "enablePartitionDiscovery": true
                         },
@@ -56,6 +87,7 @@
                     },
                     "sink": {
                         "type": "AzureSqlSink",
+                        "preCopyScript": "IF OBJECT_ID('dbo.insurance_claims_scored') IS NOT NULL TRUNCATE TABLE dbo.insurance_claims_scored",
                         "writeBehavior": "insert",
                         "sqlWriterUseTableLock": false,
                         "tableOption": "autoCreate",
@@ -452,37 +484,37 @@
                             {
                                 "source": {
                                     "name": "injury_claim",
-                                    "type": "Int32",
-                                    "physicalType": "INT32"
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
                                 },
                                 "sink": {
                                     "name": "injury_claim",
-                                    "type": "Int32",
-                                    "physicalType": "int"
+                                    "type": "Double",
+                                    "physicalType": "float"
                                 }
                             },
                             {
                                 "source": {
                                     "name": "property_claim",
-                                    "type": "Int32",
-                                    "physicalType": "INT32"
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
                                 },
                                 "sink": {
                                     "name": "property_claim",
-                                    "type": "Int32",
-                                    "physicalType": "int"
+                                    "type": "Double",
+                                    "physicalType": "float"
                                 }
                             },
                             {
                                 "source": {
                                     "name": "vehicle_claim",
-                                    "type": "Int32",
-                                    "physicalType": "INT32"
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
                                 },
                                 "sink": {
                                     "name": "vehicle_claim",
-                                    "type": "Int32",
-                                    "physicalType": "int"
+                                    "type": "Double",
+                                    "physicalType": "float"
                                 }
                             },
                             {
@@ -547,6 +579,18 @@
                             },
                             {
                                 "source": {
+                                    "name": "fraud_reeported",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "fraud_reeported",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
                                     "name": "risk_score",
                                     "type": "String",
                                     "physicalType": "UTF8"
@@ -559,12 +603,36 @@
                             },
                             {
                                 "source": {
-                                    "name": "processed_timestamp",
+                                    "name": "risk_version",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "risk_version",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "pipeline_run_id",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "pipeline_run_id",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "processed_at",
                                     "type": "DateTime",
                                     "physicalType": "INT96"
                                 },
                                 "sink": {
-                                    "name": "processed_timestamp",
+                                    "name": "processed_at",
                                     "type": "DateTime",
                                     "physicalType": "datetime2"
                                 }
@@ -579,18 +647,275 @@
                 },
                 "inputs": [
                     {
-                        "referenceName": "ds_transformed_delta",
+                        "referenceName": "ds_001_delta_parquet",
                         "type": "DatasetReference"
                     }
                 ],
                 "outputs": [
                     {
-                        "referenceName": "ds_sql_insurance_scored",
+                        "referenceName": "ds_001_sql_scored",
                         "type": "DatasetReference"
                     }
                 ]
+            },
+            {
+                "name": "SendSuccessNotification",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "CopySummaryToSQL",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-18.southindia.logic.azure.com:443/workflows/bf05dfc8141148b89453b435b57b0b62/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=vJ4MdTz2SoZEg_Y_s4TpQzHDEh2vuplx2oqF86gSJeg",
+                    "body": {
+                        "status": "SUCCEED",
+                        "pipeline": "pl_001_insurance_claims",
+                        "message": "Pipeline completed successfully"
+                    }
+                }
+            },
+            {
+                "name": "CopySummaryToSQL",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "CopyToInsuranceSQL",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "ParquetSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "wildcardFolderPath": "risk_summary/**",
+                            "wildcardFileName": "*.parquet",
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "ParquetReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "AzureSqlSink",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false,
+                        "tableOption": "autoCreate",
+                        "disableMetricsCollection": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                            {
+                                "source": {
+                                    "name": "risk_score",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "risk_score",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_severity",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_severity",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "incident_type",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "incident_type",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "policy_state",
+                                    "type": "String",
+                                    "physicalType": "UTF8"
+                                },
+                                "sink": {
+                                    "name": "policy_state",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "total_claims",
+                                    "type": "Int64",
+                                    "physicalType": "INT64"
+                                },
+                                "sink": {
+                                    "name": "total_claims",
+                                    "type": "Int64",
+                                    "physicalType": "bigint"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "avg_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
+                                },
+                                "sink": {
+                                    "name": "avg_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "float"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "max_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
+                                },
+                                "sink": {
+                                    "name": "max_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "float"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "min_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "DOUBLE"
+                                },
+                                "sink": {
+                                    "name": "min_claim_amount",
+                                    "type": "Double",
+                                    "physicalType": "float"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "fraud_count",
+                                    "type": "Int64",
+                                    "physicalType": "INT64"
+                                },
+                                "sink": {
+                                    "name": "fraud_count",
+                                    "type": "Int64",
+                                    "physicalType": "bigint"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "processed_at",
+                                    "type": "DateTime",
+                                    "physicalType": "INT96"
+                                },
+                                "sink": {
+                                    "name": "processed_at",
+                                    "type": "DateTime",
+                                    "physicalType": "datetime2"
+                                }
+                            }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "ds_001_risk_summary_parquet",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "ds_001_sql_summary",
+                        "type": "DatasetReference"
+                    }
+                ]
+            },
+            {
+                "name": "SendFailureAlert",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "RunDQCheck",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    },
+                    {
+                        "activity": "RunTransform",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    },
+                    {
+                        "activity": "CopyToInsuranceSQL",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-18.southindia.logic.azure.com:443/workflows/bf05dfc8141148b89453b435b57b0b62/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=vJ4MdTz2SoZEg_Y_s4TpQzHDEh2vuplx2oqF86gSJeg",
+                    "body": {
+                        "status": "FAILED",
+                        "pipeline": "pl_001_insurance_claims",
+                        "message": "Pipeline completed successfully"
+                    }
+                }
             }
         ],
-        "annotations": []
-    }
+        "annotations": [],
+        "lastPublishTime": "2026-05-17T17:41:24Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
 }
