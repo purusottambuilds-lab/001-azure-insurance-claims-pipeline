@@ -1,11 +1,11 @@
-# 001 — Azure Insurance Claims Risk Scoring Pipeline
+# 001 - Azure Insurance Claims Risk Scoring Pipeline
 
 ## Overview
 An enterprise-grade, end-to-end Azure Data Engineering pipeline that ingests
 raw insurance claims data, runs a multi-stage data quality framework with a
 scoring gate, applies PySpark multi-factor risk scoring, stores output as
 Delta Lake with schema evolution, loads to Azure SQL Database via JDBC,
-and sends email alerts — automated weekly via ADF.
+and sends email alerts - automated weekly via ADF.
 
 ---
 
@@ -70,12 +70,13 @@ Azure SQL: db-insurance-claims
 ## Repository Structure
 ```
 001-azure-insurance-claims-pipeline/
-├── notebooks/
-|   ├── nb_01_dq_check.py
-|   ├── nb_02_transform.py
-|   └── nb_03_load_to_sql.py
-├── adf-pipelines/
-|   └── pl_001_insurance_claims.json
+├── components/
+|   ├──notebooks/
+|   |   ├── nb_01_dq_check.py
+|   |   ├── nb_02_transform.py
+|   |   └── nb_03_load_to_sql.py
+|   ├──adf-pipelines/
+|       └── pl_001_insurance_claims.json
 ├── data/
 |   └── sample_data.csv
 ├── docs/

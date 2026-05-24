@@ -2,7 +2,7 @@
 # ================================================================
 # nb_02_transform
 # Project_001: Insurance Claims Risk Scoring
-# Purpose:PySpark transformation, risk scoring, Delta lake write
+# Purpose: PySpark transformation, risk scoring, Delta lake write
 # Author: Purusottam Swain | purusottam.builds@gmail.com
 # ================================================================
 
