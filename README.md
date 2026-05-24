@@ -71,22 +71,22 @@ Azure SQL: db-insurance-claims
 ```
 001-azure-insurance-claims-pipeline/
 ├── components/
-|   ├──notebooks/
-|   |   ├── nb_01_dq_check.py
-|   |   ├── nb_02_transform.py
-|   |   └── nb_03_load_to_sql.py
-|   ├──adf-pipelines/
-|       └── pl_001_insurance_claims.json
+|    ├── notebooks/
+|    |    ├── nb_01_dq_check.py
+|    |    ├── nb_02_transform.py
+|    |    └── nb_03_load_to_sql.py
+|    └── adf-pipelines/
+|         └── pl_001_insurance_claims.json
 ├── data/
-|   └── sample_data.csv
+|    └── sample_data.csv
 ├── docs/
-|   ├── adf_pipeline_overview.png
-|   ├── adf_pipeline_success.png
-|   ├── dq_score_output.png
-|   ├── risk_score_distribution.png
-|   ├── delta_lake_storage.png
-|   ├── sql_output_verified.png
-|   └── email_alert_received.png
+|    ├── adf_pipeline_overview.png
+|    ├── adf_pipeline_success.png
+|    ├── dq_score_output.png
+|    ├── risk_score_distribution.png
+|    ├── delta_lake_storage.png
+|    ├── sql_output_verified.png
+|    └── email_alert_received.png
 └── README.md
 ```
 
