@@ -1,11 +1,10 @@
 {
     "name": "pl_001_insurance_claims",
     "properties": {
-        "description": "Weekly pipeline ingesting claims CSV, running DQ checks, applying PySpark risk scoring, storing Delta Lake output, and loading into Azure SQL DB.",
+        "description": "Weekly pipeline - DQ check, risk scoring, Delta Lake write, SQL load via JDBC, email alerts",
         "activities": [
             {
                 "name": "RunDQCheck",
-                "description": "Data quality profiling - nulls, duplicates, schema validation, DQ score",
                 "type": "DatabricksNotebook",
                 "dependsOn": [],
                 "policy": {
@@ -26,7 +25,6 @@
             },
             {
                 "name": "RunTransform",
-                "description": "PySpark risk scoring, Delta Lake write with schema evolution",
                 "type": "DatabricksNotebook",
                 "dependsOn": [
                     {
@@ -46,6 +44,33 @@
                 "userProperties": [],
                 "typeProperties": {
                     "notebookPath": "/Users/purusottam.builds@gmail.com/dir_001_claims_insurance/nb_02_transform"
+                },
+                "linkedServiceName": {
+                    "referenceName": "ls_databricks",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "LoadToSQL",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "RunTransform",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/Users/purusottam.builds@gmail.com/dir_001_claims_insurance/nb_03_load_to_sql"
                 },
                 "linkedServiceName": {
                     "referenceName": "ls_databricks",
@@ -73,9 +98,12 @@
                 "userProperties": [],
                 "typeProperties": {
                     "method": "POST",
-                    "url": "https://prod-18.southindia.logic.azure.com:443/workflows/bf05dfc8141148b89453b435b57b0b62/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=vJ4MdTz2SoZEg_Y_s4TpQzHDEh2vuplx2oqF86gSJeg",
+                    "url": {
+                        "value": "https://prod-01.centralindia.logic.azure.com:443/workflows/ec375a60de8e4ddd997e5dbf32037d01/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=3klC2JC9Fm6ljhnssRQV7LrqhqC95rLhMeFd1YgBDHw",
+                        "type": "Expression"
+                    },
                     "body": {
-                        "value": "{\n  \"status\"   : \"SUCCEED\",\n  \"pipeline\" : \"@{pipeline().Pipeline}\",\n  \"message\"  : \"Insurance Claims pipeline ccompleted successfully — check ADF Monitor for details\",\n  \"runId\"    : \"@{pipeline().RunId}\"\n}",
+                        "value": "{\n  \"status\"   : \"SUCCESS\",\n  \"pipeline\" : \"@{pipeline().Pipeline}\",\n  \"message\"  : \"Insurance Claims pipeline completed successfully\",\n  \"runId\"    : \"@{pipeline().RunId}\"\n}\n",
                         "type": "Expression"
                     }
                 }
@@ -113,43 +141,17 @@
                 "userProperties": [],
                 "typeProperties": {
                     "method": "POST",
-                    "url": "https://prod-18.southindia.logic.azure.com:443/workflows/bf05dfc8141148b89453b435b57b0b62/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=vJ4MdTz2SoZEg_Y_s4TpQzHDEh2vuplx2oqF86gSJeg",
+                    "url": {
+                        "value": "https://prod-01.centralindia.logic.azure.com:443/workflows/ec375a60de8e4ddd997e5dbf32037d01/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=3klC2JC9Fm6ljhnssRQV7LrqhqC95rLhMeFd1YgBDHw",
+                        "type": "Expression"
+                    },
                     "body": {
-                        "value": "{\n  \"status\"   : \"FAILED\",\n  \"pipeline\" : \"@{pipeline().Pipeline}\",\n  \"message\"  : \"Insurance Claims pipeline FAILED !!! — check ADF Monitor for details\",\n  \"runId\"    : \"@{pipeline().RunId}\"\n}",
+                        "value": "{\n  \"status\"   : \"FAILED\",\n  \"pipeline\" : \"@{pipeline().Pipeline}\",\n  \"message\"  : \"Insurance Claims pipeline FAILED — check ADF Monitor for details\",\n  \"runId\"    : \"@{pipeline().RunId}\"\n}\n",
                         "type": "Expression"
                     }
                 }
-            },
-            {
-                "name": "LoadToSQL",
-                "type": "DatabricksNotebook",
-                "dependsOn": [
-                    {
-                        "activity": "RunTransform",
-                        "dependencyConditions": [
-                            "Succeeded"
-                        ]
-                    }
-                ],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "notebookPath": "/Users/purusottam.builds@gmail.com/dir_001_claims_insurance/nb_03_load_to_sql"
-                },
-                "linkedServiceName": {
-                    "referenceName": "ls_databricks",
-                    "type": "LinkedServiceReference"
-                }
             }
         ],
-        "annotations": [],
-        "lastPublishTime": "2026-05-24T09:57:02Z"
-    },
-    "type": "Microsoft.DataFactory/factories/pipelines"
+        "annotations": []
+    }
 }

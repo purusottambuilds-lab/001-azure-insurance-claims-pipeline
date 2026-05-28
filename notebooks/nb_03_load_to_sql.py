@@ -1,17 +1,18 @@
 # Databricks notebook source
 # ================================================================
 # nb_03_load_to_sql
-# Project_001: Insurance Claims Risk Scoring
-# Purpose: Load Delta Lake output to Azure SQL via JDBC
-# Author: Purusottam Swain | purusottam.builds@gmail.com
+# Project 001   : Insurance Claims Risk Scoring
+# Purpose       : Load Delta Lake output to Azure SQL Database via JDBC
+# Folder        : dir_001_claims_insurance
+# Author        : Purusottam Swain | purusottam.builds@gmail.com
 # ================================================================
 
 # COMMAND ----------
 
-# cell-1: storage and sql config
+# CELL 1 - Storage and SQL Configuration
 
 storage_account_name = "sainsuranceps01"
-storage_account_key = "YOUR_STORAGE_KEY_HERE"
+storage_account_key = "YOUR_STORAGE_ACCOUNT_KEY_HERE"
 
 spark.conf.set(
     f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net",
@@ -41,9 +42,10 @@ summary_path = (
 
 print("Config set")
 
+
 # COMMAND ----------
 
-# cell-2: write main scored table to SQL
+# CELL 2 - Write insurance_claims_scored to SQL
 
 df_scored = spark.read.format("delta").load(delta_path)
 print(f"Delta records to load: {df_scored.count()}")
@@ -56,9 +58,10 @@ df_scored.write.format("jdbc").option("url", sql_url).option(
 
 print("dbo.insurance_claims_scored: written successfully")
 
+
 # COMMAND ----------
 
-# cell-3: write summary table to SQL
+# CELL 3 - Write risk_summary_by_severity to SQL
 
 df_summary = spark.read.format("delta").load(summary_path)
 print(f"Summary records to load: {df_summary.count()}")
@@ -71,9 +74,10 @@ df_summary.write.format("jdbc").option("url", sql_url).option(
 
 print("dbo.risk_summary_by_severity: written successfully")
 
+
 # COMMAND ----------
 
-# cell-4: verification
+# CELL 4 - Verify SQL Tables
 
 df_verify = (
     spark.read.format("jdbc")
@@ -84,6 +88,11 @@ df_verify = (
 )
 
 print(f"SQL rows verified: {df_verify.count()}")
-display(df_verify.limit(5))
+display(
+    df_verify.select(
+        "policy_number", "total_claim_amount", "risk_score", "processed_at"
+    ).limit(10)
+)
+
 
 # COMMAND ----------
